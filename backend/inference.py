@@ -23,22 +23,27 @@ def get_product_and_description_from_url(url):
                 },
                 {
                     "role": "user",
-                    "content": f"""Extract title and description of the product from the HTML at this product page 
+                    "content": f"""Extract title, description, and category of the product from the HTML at this product page 
                     {title} and {description}. Make sure the description accurately describes the product. 
-                    Return only a JSON object with title and description with no other output."""
+                    Return a title and description and category as a json object with no other output.
+                    Make sure your output has those fields."""
                 }
             ],
             model=model,
         )
-
+        
         try:
             json_obj = json.loads(pre_json_title_and_description.choices[0].message.content)
             break
         except (TypeError, ValueError) as e:
             if (num_tries == 3):
+                #(pre_json_title_and_description.choices[0].message.content)
                 raise Exception("Invalid JSON object") from e
             else:
+                num_tries+=1
                 continue
+
+    json_obj["url"] = url
 
     return json_obj
 
@@ -73,9 +78,10 @@ def get_questions_for_product(json_obj):
             if (num_tries == 3):
                 raise Exception("Invalid JSON object") from e
             else:
+                num_tries+=1
                 continue
-
-    return json_questions
+    json_obj["questions"] = json_questions
+    return json_obj
 
 if __name__ == "__main__":
     urls= [
@@ -89,7 +95,6 @@ if __name__ == "__main__":
         "https://www.nike.com/t/ja-2-basketball-shoes-zNhj0Q/FD7328-500"
     ]
     for url in urls:
-        title_and_descriptions = get_product_and_description_from_url(url)
-        print(title_and_descriptions)
-        questions = get_questions_for_product(title_and_descriptions)
-        print(questions)
+        prod_entry = get_product_and_description_from_url(url)
+        final_entry = get_questions_for_product(prod_entry)
+        print(final_entry)
