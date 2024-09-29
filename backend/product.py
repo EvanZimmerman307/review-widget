@@ -23,6 +23,12 @@ def connect_to_mongo():
         print(f"Error connecting to MongoDB: {e}")
         return None
 
+def find_by_url(client, db_name, collection_name, url):
+    """Find a product by its URL in MongoDB."""
+    db = client[db_name]
+    collection = db[collection_name]
+    return collection.find_one({"url": url})
+
 def insert_if_not_exists(client, db_name, collection_name, document):
     """Checks if a document exists in the collection and inserts if not."""
     db = client[db_name]
