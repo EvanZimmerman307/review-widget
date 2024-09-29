@@ -1,11 +1,41 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown} from 'lucide-react';
 import Look from './components/lookAtReviews'
 import Make from './components/makeReview.js'
 
+
 const Widget = () => {
   const [activeOption, setActiveOption] = useState(null);
+  const [url, setUrl] = useState('');
   
+  useEffect(() => {
+    const currentUrl = window.location.href;
+    setUrl(currentUrl);
+    const postUrl = async () => {
+      const urlData = {
+        url: url
+      };
+
+      try {
+        const response = await fetch('http://localhost:5000/process/product', {
+          method: 'POST',
+          body: urlData
+        });
+        const data = await response.json();
+                if (response.ok) {
+                    console.log('URL added:', data);
+                } else {
+                    console.error('Error adding URL:', data);
+                }
+      } catch (error) {
+          console.error('Network error:', error);
+      }
+      
+    };
+
+    postUrl(); // Call the function to post data
+  }, [url]);
+
 
   const toggleOption = (option) => {
     setActiveOption(activeOption === option ? null : option);
