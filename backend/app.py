@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from inference import get_product_and_description_from_url, get_questions_for_product  # Import your AI generation function
 from product import insert_if_not_exists, connect_to_mongo, find_by_url  # MongoDB functions
-from inference import generate_example_review
+from inference import enhance_question, categorize_review
 from vector_metrics import query_for_embedding
+import time
+import json
 
 app = Flask(__name__)
 
@@ -75,15 +77,15 @@ def submit_review():
             "url": product_url,
             "review": review,
             "rating": rating,
-            "embedding": query_for_embedding(review)
+            "category": categorize_review(review, ["durability", "affordibility", "accessibility", "versatility"])
         }
 
         # Step 4: Insert the review into MongoDB
         db = client['review-db']
         collection = db['reviews'] 
-        collection.insert_one(review_document)
-
-        # Step 5: Return success message
+        insert_result = collection.insert_one(review_document)
+        collection.find()
+        
         return jsonify({"message": "Review submitted"}), 201
 
     except Exception as e:
@@ -92,22 +94,36 @@ def submit_review():
 
 @app.route('/search_review', methods=['POST'])
 def search_review():
-    # get the data
-    """Receive URL, review"""
     data = request.json
     product_url = data.get('url')
-    review = data.get('review')
-    # category = data.get('category') # use this to generate relevant sample reviews
+    question = data.get('question')
+    query = {"url": product_url}
+    user_selected_category = data.get('category')
+    all_intended_reviews = []
     
-    #receive item name and sentiment category (e.g. blender and / durability?)
-    # create a monogodb index in dashboard to find most similar embedding
-    # generate a review about this item that covers this category
-    # do the vector search
-    # return the review we just generated
-    # computing vector embeddings that max out the category
-
-
-
+    # Find the document
+    try:
+        # Connect to MongoDB
+        client = connect_to_mongo()
+        if not client:
+            return jsonify({"error": "Failed to connect to MongoDB"}), 500
+        
+        db = client['review-db']
+        collection = db['reviews'] 
+        # collection.find({"field1": "value1", "field2": "value2"})
+        documents = collection.find({"category": user_selected_category, "url": product_url})
+        all_intended_reviews = []
+        for doc in documents:
+            review = doc.get('review', "")
+            all_intended_reviews.append(review)
+        return json.dumps(all_intended_reviews)
+       
+     
+        
+    except Exception as e:
+        print(e)
+        return None
+    
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
