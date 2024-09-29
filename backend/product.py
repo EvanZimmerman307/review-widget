@@ -1,27 +1,11 @@
 import os
-from pymongo.mongo_client import MongoClient
-from pymongo.server_api import ServerApi
-from dotenv import load_dotenv
 from inference import get_product_and_description_from_url, get_questions_for_product
-
-# Load environment variables from a .env file
-load_dotenv()
+from pymongo_connection import connect_to_mongo
 
 # Retrieve MongoDB credentials from environment variables
 MONGODB_URI = os.getenv("MONGODB_URI")
 DB_NAME = "review-db" 
 COLLECTION_NAME = "products"
-
-def connect_to_mongo():
-    """Establishes a connection to MongoDB."""
-    try:
-        client = MongoClient(MONGODB_URI, server_api=ServerApi('1'))
-        client.admin.command('ping')  # Test connection
-        print("Successfully connected to MongoDB.")
-        return client
-    except Exception as e:
-        print(f"Error connecting to MongoDB: {e}")
-        return None
 
 def find_by_url(client, db_name, collection_name, url):
     """Find a product by its URL in MongoDB."""
@@ -50,7 +34,6 @@ def insert_if_not_exists(client, db_name, collection_name, document):
 def main():
     # Connect to MongoDB
     client = connect_to_mongo()
-
     if client:
         # Example product document
         urls= [

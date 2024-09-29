@@ -8,7 +8,6 @@ from product import connect_to_mongo
 load_dotenv()
 
 # Retrieve MongoDB credentials from environment variables
-MONGODB_URI = os.getenv("MONGODB_URI")
 DB_NAME = "review-db" 
 COLLECTION_NAME = "reviews"
 
