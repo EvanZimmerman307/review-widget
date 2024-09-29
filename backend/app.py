@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 from inference import get_product_and_description_from_url, get_questions_for_product  # Import your AI generation function
 from product import insert_if_not_exists, find_by_url  # MongoDB functions
-from inference import enhance_question, categorize_review
+from inference import enhance_question, categorize_review, categorize_question
 from vector_metrics import query_for_embedding
 from pymongo_connection import connect_to_mongo
 import time
@@ -17,24 +17,31 @@ client = connect_to_mongo()
 def index():
     return "welcome to the index page"
 
-@app.route('/process_product', methods=['POST'])
+@app.route('/testpost', methods=['POST'])
+def test_post():
+    return jsonify({"questions: "})
+
+@app.route('/process_product', methods=['POST', 'OPTIONS'])
 def process_product():
-    print("request.json")
+    if request.method == 'OPTIONS':
+        # Handle the preflight OPTIONS request
+         return '', 200  # Respond with 200 OK for the preflight request
+    
     """Process the product URL: scrape if not in DB, then retrieve and return questions."""
     data = request.json
-    product_url = data.get('url')
+    product_url = data
 
     if not product_url:
         return jsonify({"error": "No URL provided"}), 400
 
     try:
         # Step 1: Connect to Mongo
-        if not client:
+        if client is None:
             return jsonify({"error": "Failed to connect to MongoDB"}), 500
         # Step 2: Check if the product already exists in MongoDB
         existing_product = find_by_url(client, 'review-db', 'products', product_url)
 
-        if not existing_product:
+        if existing_product is None:
             # Step 3: scrape product and description
             prod_entry = get_product_and_description_from_url(product_url)
             if not prod_entry:
@@ -44,14 +51,15 @@ def process_product():
             document = get_questions_for_product(prod_entry)
 
             # Step 5: Insert the new product into MongoDB
-            insert_result, insert_status_code = insert_if_not_exists(client, 'review-db', 'products', document)
-            if insert_status_code != 201:
-                return jsonify({"error": "Failed to insert new product"}), 500
+            # insert_result, insert_status_code = insert_if_not_exists(client, 'review-db', 'products', document)
+            # if insert_status_code != 201:
+            #     return jsonify({"error": "Failed to insert new product"}), 500
+            insert_if_not_exists(client, 'review-db', 'products', document)
 
         # Step 7: Retrieve the product again (whether it was inserted or already existed)
         product = find_by_url(client, 'review-db', 'products', product_url)
-        if not product or 'questions' not in product:
-            return jsonify({"error": "Product not found or no questions available"}), 500
+        # if produc or 'questions' not in product:
+        #     return jsonify({"error": "Product not found or no questions available"}), 500
 
         # Step 8: Extract the first 3 questions using keys like q1, q2, q3
         questions_field = product.get('questions', {})
@@ -63,8 +71,11 @@ def process_product():
         print(f"Error processing the product: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/submit_review', methods=['POST'])
+@app.route('/submit_review', methods=['POST', 'OPTIONS'])
 def submit_review():
+    if request.method == 'OPTIONS':
+        # Handle the preflight OPTIONS request
+         return '', 200  # Respond with 200 OK for the preflight request
     """Receive URL, review, rating; generate review embedding, and insert into MongoDB."""
     data = request.json
     product_url = data.get('url')
@@ -84,7 +95,7 @@ def submit_review():
             "url": product_url,
             "review": review,
             "rating": rating,
-            "category": categorize_review(review, ["durability", "affordibility", "accessibility", "versatility"])
+            "category": categorize_review(review, ["durability", "price", "accessibility", "versatility"])
         }
 
         # Step 4: Insert the review into MongoDB
@@ -99,13 +110,17 @@ def submit_review():
         print(f"Error submitting review: {e}")
         return jsonify({"error": str(e)}), 500
 
-@app.route('/search_review', methods=['POST'])
+@app.route('/search_review', methods=['POST', 'OPTIONS'])
 def search_review():
+    if request.method == 'OPTIONS':
+        # Handle the preflight OPTIONS request
+         return '', 200  # Respond with 200 OK for the preflight request
+    """Receive URL, review, rating; generate review embedding, and insert into MongoDB."""
     data = request.json
     product_url = data.get('url')
-    question = data.get('question')
-    query = {"url": product_url}
-    user_selected_category = data.get('category')
+    question = data.get('text')
+    #user_selected_category = data.get('category')
+    user_selected_category = categorize_question(question, ["durability", "price", "accessibility", "versatility"])
     all_intended_reviews = []
     
     # Find the document

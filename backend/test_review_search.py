@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from inference import get_product_and_description_from_url, get_questions_for_product  # Import your AI generation function
-from product import insert_if_not_exists, connect_to_mongo, find_by_url  # MongoDB functions
+from product import insert_if_not_exists, find_by_url  # MongoDB functions
+from pymongo_connection import connect_to_mongo
 from inference import enhance_question
 from vector_metrics import query_for_embedding
 from inference import categorize_review
@@ -59,21 +60,32 @@ def test_script():
         insert_result = collection.insert_one(review_document)
     
 
-    question = "How long do these shoes last?"
-    user_selected_category = "durability"
-    query = {"url": 'xyz.com'}
+    
 
-    db = client['review-db']
-    collection = db['reviews'] 
-    # collection.find({"field1": "value1", "field2": "value2"})
-    documents = collection.find({"category": user_selected_category, "url": "xyz.com"})
-    all_intended_reviews = []
-    for doc in documents:
-        review = doc.get('review', "")
-        all_intended_reviews.append(review)
-    print(all_intended_reviews)
-    return json.dumps(all_intended_reviews)
+    # question = "How long do these shoes last?"
+    # user_selected_category = "durability"
+    # query = {"url": 'xyz.com'}
 
+    # db = client['review-db']
+    # collection = db['reviews'] 
+    # # collection.find({"field1": "value1", "field2": "value2"})
+    # documents = collection.find({"category": user_selected_category, "url": "xyz.com"})
+    # all_intended_reviews = []
+    # for doc in documents:
+    #     review = doc.get('review', "")
+    #     all_intended_reviews.append(review)
+    # print(all_intended_reviews)
+    #return json.dumps(all_intended_reviews)
+    return None
+
+def insert_xyz():
+    client = connect_to_mongo()
+    url="https://kith.com/collections/kith-footwear/products/x2j162xf85500"
+    prod_entry = get_product_and_description_from_url(url)
+    final_entry = get_questions_for_product(prod_entry)
+    final_entry['url'] = 'xyz.com'
+    insert_if_not_exists(client, 'review-db', 'products', final_entry)
 
 if __name__ == "__main__":
-    test_script()
+    #test_script()
+    insert_xyz()

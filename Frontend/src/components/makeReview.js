@@ -1,33 +1,41 @@
-import React, {useState, useEffect} from 'react';
-import { Star} from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star } from 'lucide-react';
+import axios from 'axios';
 
-const Make = () => {
-  //const [question, setQuestion] = useState('');
+const Make = ({question}) => {
   const [url, setUrl] = useState('');
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
   useEffect(() => {
     // Get the full URL of the current page
-    const currentUrl = window.location.href;
-    setUrl(currentUrl); // Set the URL to the state
+    setUrl('xyz.com'); // Set the URL to the state
   }, []);
-  const handleSubmit = (e) => {
-    //e.preventDefault();
-    console.log({ rating, review, email });
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();  // Prevent default form submission
+
     const reviewData = {
       url: url,
       rating: rating,
       review: review,
-      email: email
+      email: email,
     };
-    alert(JSON.stringify(reviewData, null, 2));
-    setSubmitted(true);
+
+    try {
+      const response = await axios.post('http://127.0.0.1:5000/submit_review', reviewData);
+      console.log('Response:', response.data);
+      setSubmitted(true); // Update state to show thank you message
+    } catch (error) {
+      console.error('Error posting data:', error.response ? error.response.data : error.message);
+    }
   };
 
-  return (<div className="bg-red-500 p-6 rounded-lg w-full max-w-md">
-    <div className="relative">
+  return (
+    <div className="bg-red-500 p-6 rounded-lg w-full max-w-md">
+      <div className="relative">
         {!submitted ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -43,7 +51,7 @@ const Make = () => {
                 ))}
               </div>
             </div>
-            <p className="text-white mb-2">"How did this product impact your life?"</p>
+            <p className="text-white mb-2">You can consider: {typeof question === 'string' ? question : ''}</p>
             <div>
               <p className="text-white mb-2">REVIEW :</p>
               <textarea
@@ -52,7 +60,7 @@ const Make = () => {
                 value={review}
                 onChange={(e) => setReview(e.target.value)}
                 placeholder="Write your review here..."
-              ></textarea>
+              />
             </div>
             <div>
               <p className="text-white mb-2">EMAIL:</p>
@@ -71,13 +79,13 @@ const Make = () => {
               SUBMIT
             </button>
           </form>
-          ) :  (
-            <div className="relative flex flex-col items-center">
+        ) : (
+          <div className="relative flex flex-col items-center">
             <h1 className="text-5xl font-bold mt-4 animate-bounce text-white">Thank You!</h1>
           </div>
         )}
-        </div>
-        </div>
+      </div>
+    </div>
   );
 };
 

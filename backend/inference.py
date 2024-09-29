@@ -126,6 +126,26 @@ def categorize_review(review, categories):
     )
     return selected.choices[0].message.content
 
+def categorize_question(question, categories):
+    selected = client.chat.completions.create(
+    messages=[
+        {
+            "role": "system",
+            "content": f"""You are an expert in sentiment analysis and you categorize questions into one of the following categories: {categories}. 
+            """
+        },
+        {
+            "role": "user",
+            "content": f"""Categorize this question {question} into one of these categories:
+            {categories}. Although the question may fall into multiple categories, try your best
+            to categorize it into one. Your output should consist of a single selection from {categories}. Only one word please. 
+            Try your best, make sure it is not more than one word."""
+        }
+    ],
+    model=model,
+    )
+    return selected.choices[0].message.content
+
 if __name__ == "__main__":
     urls= [
         "https://kith.com/collections/kith-footwear/products/x2j162xf85500",
