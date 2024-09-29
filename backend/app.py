@@ -1,6 +1,8 @@
 from flask import Flask, request, jsonify
 from inference import get_product_and_description_from_url, get_questions_for_product  # Import your AI generation function
 from product import insert_if_not_exists, connect_to_mongo, find_by_url  # MongoDB functions
+from inference import generate_example_review
+from vector_metrics import query_for_embedding
 
 app = Flask(__name__)
 
@@ -50,6 +52,62 @@ def process_product():
     except Exception as e:
         print(f"Error processing the product: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/submit_review', methods=['POST'])
+def submit_review():
+    """Receive URL, review, rating; generate review embedding, and insert into MongoDB."""
+    data = request.json
+    product_url = data.get('url')
+    review = data.get('review')
+    rating = data.get('rating')
+
+    if not product_url or not review or not rating:
+        return jsonify({"error": "Missing required fields"}), 400
+
+    try:
+        # Step 2: Connect to MongoDB
+        client = connect_to_mongo()
+        if not client:
+            return jsonify({"error": "Failed to connect to MongoDB"}), 500
+
+        # Step 3: Prepare the document for insertion
+        review_document = {
+            "url": product_url,
+            "review": review,
+            "rating": rating,
+            "embedding": query_for_embedding(review)
+        }
+
+        # Step 4: Insert the review into MongoDB
+        db = client['review-db']
+        collection = db['reviews'] 
+        collection.insert_one(review_document)
+
+        # Step 5: Return success message
+        return jsonify({"message": "Review submitted"}), 201
+
+    except Exception as e:
+        print(f"Error submitting review: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/search_review', methods=['POST'])
+def search_review():
+    # get the data
+    """Receive URL, review"""
+    data = request.json
+    product_url = data.get('url')
+    review = data.get('review')
+    # category = data.get('category') # use this to generate relevant sample reviews
+    
+    #receive item name and sentiment category (e.g. blender and / durability?)
+    # create a monogodb index in dashboard to find most similar embedding
+    # generate a review about this item that covers this category
+    # do the vector search
+    # return the review we just generated
+    # computing vector embeddings that max out the category
+
+
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

@@ -94,8 +94,8 @@ def generate_example_review(item, sentiment_category):
         },
         {
             "role": "user",
-            "content": f"""Generate a 2-4 line review of {item} that will be used to compare against other
-            reviewer's in the category of {sentiment_category}
+            "content": f"""Generate a 2-4 line review of {item} that will be used to compare against 
+            other reviewer's in the category of {sentiment_category}
             Make sure the review take into account the {item}'s features, use cases, and categories
             and both perspectives on the item's {sentiment_category} (e.g. positive and negative)"""
         }
