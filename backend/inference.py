@@ -83,26 +83,45 @@ def get_questions_for_product(json_obj):
     json_obj["questions"] = json_questions
     return json_obj
 
-def generate_example_review(item, sentiment_category):
-    example_review = client.chat.completions.create(
+def enhance_question(question):
+    question = client.chat.completions.create(
     messages=[
         {
             "role": "system",
-            "content": f"""You are an expert in NLP and sentiment analysis, as well as writing reviews 
-            showcasing specific categories like the product's {sentiment_category}. 
+            "content": f"""You are an expert in NLP and sentiment analysis, as well as enhancing reviews. 
             """
         },
         {
             "role": "user",
-            "content": f"""Generate a 2-4 line review of {item} that will be used to compare against other
-            reviewer's in the category of {sentiment_category}
-            Make sure the review take into account the {item}'s features, use cases, and categories
-            and both perspectives on the item's {sentiment_category} (e.g. positive and negative)"""
+            "content": f"""Augment this question to make it easier for us to use vector similarity search
+            to find the most similar review that addresses this question. This can come in the form
+            of increasing keywords, or talking about the item's features/use cases but make sure not to change the 
+            meaning of the question. Do not include any other output than what is asked."""
         }
     ],
     model=model,
     )
-    return example_review
+    return question.choices[0].message.content
+
+def categorize_review(review, categories):
+    selected = client.chat.completions.create(
+    messages=[
+        {
+            "role": "system",
+            "content": f"""You are an expert in sentiment analysis and review categorization into one of the following categories: {categories}. 
+            """
+        },
+        {
+            "role": "user",
+            "content": f"""Categorize this review {review} into one of these categories:
+            {categories}. Although the review may fall into multiple categories, try your best
+            to categorize it into one. Your output should consist of a single selection from {categories}. Only one word please. 
+            Try your best, make sure it is not more than one word."""
+        }
+    ],
+    model=model,
+    )
+    return selected.choices[0].message.content
 
 if __name__ == "__main__":
     urls= [
@@ -119,3 +138,4 @@ if __name__ == "__main__":
         prod_entry = get_product_and_description_from_url(url)
         final_entry = get_questions_for_product(prod_entry)
         print(final_entry)
+    

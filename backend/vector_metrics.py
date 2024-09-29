@@ -10,3 +10,5 @@ headers = {"Authorization": f"Bearer {hf_token}"}
 def query_for_embedding(review):
     response = requests.post(api_url, headers=headers, json={"inputs": review, "options":{"wait_for_model":True}})
     return response.json()
+
+print(len(query_for_embedding("abcd")))
