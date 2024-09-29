@@ -9,7 +9,6 @@ import time
 import json
 
 def test_script():
-    #pc = Pinecone(api_key='f63cc06c-acf5-4769-ad9a-b83c52798e58')
     durability_reviews = [
     "I've been using these shoes for months, and they are still holding up great. The durability is impressive, even after constant use on the court.",
     "Not happy with how quickly these shoes wore out. After just a few games, the soles are already starting to come apart.",
