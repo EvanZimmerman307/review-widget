@@ -1,16 +1,34 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { Star} from 'lucide-react';
+
 const Make = () => {
+  //const [question, setQuestion] = useState('');
+  const [url, setUrl] = useState('');
   const [rating, setRating] = useState(5);
   const [review, setReview] = useState('');
   const [email, setEmail] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  useEffect(() => {
+    // Get the full URL of the current page
+    const currentUrl = window.location.href;
+    setUrl(currentUrl); // Set the URL to the state
+  }, []);
   const handleSubmit = (e) => {
-    e.preventDefault();
+    //e.preventDefault();
     console.log({ rating, review, email });
-    // Here you would typically send this data to your backend
+    const reviewData = {
+      url: url,
+      rating: rating,
+      review: review,
+      email: email
+    };
+    alert(JSON.stringify(reviewData, null, 2));
+    setSubmitted(true);
   };
 
   return (<div className="bg-red-500 p-6 rounded-lg w-full max-w-md">
+    <div className="relative">
+        {!submitted ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <p className="text-white mb-2">RATING :</p>
@@ -25,11 +43,7 @@ const Make = () => {
                 ))}
               </div>
             </div>
-            <input
-              type="text"
-              className="w-full p-3 rounded-full"
-              placeholder="How did this product impact your life?"
-            />
+            <p className="text-white mb-2">"How did this product impact your life?"</p>
             <div>
               <p className="text-white mb-2">REVIEW :</p>
               <textarea
@@ -57,7 +71,14 @@ const Make = () => {
               SUBMIT
             </button>
           </form>
-        </div>);
+          ) :  (
+            <div className="relative flex flex-col items-center">
+            <h1 className="text-5xl font-bold mt-4 animate-bounce text-white">Thank You!</h1>
+          </div>
+        )}
+        </div>
+        </div>
+  );
 };
 
 export default Make;
