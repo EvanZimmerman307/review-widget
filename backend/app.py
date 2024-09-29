@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from inference import get_product_and_description_from_url, get_questions_for_product  # Import your AI generation function
 from product import insert_if_not_exists, find_by_url  # MongoDB functions
 from inference import enhance_question, categorize_review
@@ -8,7 +9,9 @@ import time
 import json
 
 app = Flask(__name__)
-client = connect_to_mongo
+CORS(app)
+client = connect_to_mongo()
+
 
 @app.route('/')
 def index():

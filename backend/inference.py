@@ -1,10 +1,13 @@
 import os
 from groq import Groq
+from dotenv import load_dotenv
 from scraper import fetch_product_info
 import json
 
+load_dotenv()
+
 client = Groq(
-    api_key=os.environ.get("GROQ_API_KEY"),
+    api_key=os.getenv("GROQ_API_KEY"),
 )
 model = "llama3-70b-8192"
 max_tries = 3
