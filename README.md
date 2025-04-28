@@ -1,4 +1,4 @@
 Review Widget
 
 
-See Readme in frontend/ to run web app.
+See Readme in Frontend/ to run web app.
